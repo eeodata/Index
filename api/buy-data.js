@@ -1,42 +1,53 @@
 export default async function handler(req, res) {
-  // Allow CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   const { network, phone, plan } = req.body;
-  const API_KEY = process.env.DATASTATION_KEY;
 
-  console.log('Buying data:', { network, phone, plan });
-
-  if (!API_KEY) {
-    return res.status(500).json({ error: 'DATASTATION_KEY not set in Vercel' });
+  if (!network || !phone || !plan) {
+    return res.status(400).json({ 
+      error: 'Missing fields',
+      message: 'network, phone, plan required' 
+    });
   }
 
   try {
+    // DataStation integration
     const response = await fetch('https://datastation.com.ng/api/data/', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Token ${API_KEY}`
+        'Authorization': `Token ${process.env.DATASTATION_KEY}`
       },
       body: JSON.stringify({
-        network: parseInt(network),
+        network: network.toLowerCase(),
         mobile_number: phone,
-        plan: parseInt(plan),
+        plan: plan,
         Ported_number: true
       })
     });
 
     const data = await response.json();
-    console.log('DataStation response:', data);
-    return res.status(200).json(data);
-    
+
+    if (response.ok && data.Status === 'successful') {
+      return res.status(200).json({
+        status: 'success',
+        message: `${plan} delivered to ${phone}`,
+        data
+      });
+    } else {
+      return res.status(400).json({
+        status: 'failed',
+        message: data.api_response || 'Data purchase failed',
+        data
+      });
+    }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ 
+      error: 'Server error',
+      message: 'Could not process request' 
+    });
   }
 }
