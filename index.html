@@ -1,44 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EEO Data - Cheap Data</title>
-<style>body{font-family:sans-serif;background:#111;color:#fff;padding:20px}input,select,button{width:100%;padding:14px;margin:8px 0;border-radius:8px;border:none}button{background:#00c853;color:#fff;font-weight:bold;font-size:16px}</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EEO Data - Cheap Data & Airtime</title>
+<style>
+body{margin:0;font-family:system-ui;background:#0a0a0a;color:#fff;padding:16px}
+.card{background:#1a1a1a;border-radius:16px;padding:20px;max-width:400px;margin:auto}
+h1{text-align:center;color:#00e676}
+.tabs{display:flex;gap:8px;margin:16px 0}
+.tab{flex:1;padding:12px;border-radius:10px;border:1px solid #333;background:#222;color:#fff}
+.tab.active{background:#00c853;color:#fff}
+input,select{width:100%;padding:14px;margin:8px 0;border-radius:10px;border:1px solid #333;background:#222;color:#fff;box-sizing:border-box}
+button.buy{width:100%;padding:16px;background:#00c853;border:none;border-radius:12px;color:#fff;font-weight:800;font-size:17px;margin-top:10px}
+#msg{margin-top:12px;padding:12px;border-radius:8px;display:none}
+</style>
 </head>
 <body>
-<h2>EEO Data - Buy Data</h2>
-<select id="network"><option value="1">MTN</option><option value="2">Glo</option><option value="3">Airtel</option><option value="4">9mobile</option></select>
-<input id="phone" placeholder="Phone number e.g 081..." type="tel"/>
-<select id="plan"><option value="1">1GB - ₦300</option><option value="2">2GB - ₦600</option><option value="3">5GB - ₦1400</option></select>
-<button onclick="buyData()" id="btn">BUY DATA NOW</button>
-<p id="msg"></p>
+<div class="card">
+<h1>EEO DATA</h1>
+<div class="tabs"><button class="tab active" onclick="show('data')">DATA</button><button class="tab" onclick="show('airtime')">AIRTIME</button></div>
+
+<div id="dataBox">
+<select id="net"><option value="1">MTN</option><option value="2">Glo</option><option value="3">Airtel</option><option value="4">9mobile</option></select>
+<input id="phone" placeholder="081..." type="tel"/>
+<select id="plan"><option value="1">MTN 1GB ₦290</option><option value="2">MTN 2GB ₦580</option><option value="7">MTN 5GB ₦1400</option><option value="8">MTN 10GB ₦2800</option></select>
+<button class="buy" onclick="buyData()">BUY DATA NOW</button>
+</div>
+
+<div id="airBox" style="display:none">
+<select id="net2"><option value="1">MTN</option><option value="2">Glo</option><option value="3">Airtel</option><option value="4">9mobile</option></select>
+<input id="phone2" placeholder="081..." type="tel"/>
+<input id="amt" placeholder="Amount 100-5000" type="number"/>
+<button class="buy" onclick="buyAirtime()">BUY AIRTIME NOW</button>
+</div>
+
+<div id="msg"></div>
+</div>
 
 <script>
+function show(t){
+  document.getElementById('dataBox').style.display=t==='data'?'block':'none';
+  document.getElementById('airBox').style.display=t==='airtime'?'block':'none';
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',(t==='data'&&i===0)||(t==='airtime'&&i===1)));
+}
+function showMsg(txt,ok){const m=document.getElementById('msg');m.style.display='block';m.style.background=ok?'#00c85322':'#ff174422';m.innerText=txt}
+
 async function buyData(){
-  const btn=document.getElementById('btn');
-  const msg=document.getElementById('msg');
-  btn.innerText='Processing...';
-  msg.innerText='';
+  const phone=document.getElementById('phone').value.trim();
+  if(phone.length<11)return showMsg('Put correct number',false);
+  showMsg('Processing... please wait',true);
   try{
-    const res=await fetch('/api/buy-data',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        network:document.getElementById('network').value,
-        phone:document.getElementById('phone').value,
-        plan:document.getElementById('plan').value
-      })
-    });
-    const data=await res.json();
-    console.log(data);
-    msg.innerText=JSON.stringify(data);
-    if(data.status==='success' || data.Status==='successful'){
-      alert('SUCCESS! Data sent!');
-    } else {
-      alert('Response: '+JSON.stringify(data));
-    }
-  }catch(e){alert('Error: '+e.message); msg.innerText=e.message}
-  btn.innerText='BUY DATA NOW';
+    const r=await fetch('/api/buy-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network:document.getElementById('net').value,phone,plan:document.getElementById('plan').value})});
+    const d=await r.json(); console.log(d); showMsg(JSON.stringify(d),true);
+    if(d.status==='success'||d.Status==='successful'||d.success){showMsg('SUCCESS! Data delivered!',true); alert('Data sent!');}
+  }catch(e){showMsg('Error: '+e.message,false)}
+}
+async function buyAirtime(){
+  const phone=document.getElementById('phone2').value.trim(); const amt=document.getElementById('amt').value;
+  if(phone.length<11||!amt)return showMsg('Fill phone and amount',false);
+  showMsg('Processing airtime...',true);
+  try{
+    const r=await fetch('/api/buy-airtime',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network:document.getElementById('net2').value,phone,amount:amt})});
+    const d=await r.json(); console.log(d); showMsg(JSON.stringify(d),true);
+  }catch(e){showMsg('Error: '+e.message,false)}
 }
 </script>
 </body>
