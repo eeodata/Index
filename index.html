@@ -1,68 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EEO Data - Cheap Data & Airtime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EEO DATA - Buy Cheap Data</title>
 <style>
-body{margin:0;font-family:system-ui;background:#0a0a0a;color:#fff;padding:16px}
-.card{background:#1a1a1a;border-radius:16px;padding:20px;max-width:400px;margin:auto}
-h1{text-align:center;color:#00e676}
-.tabs{display:flex;gap:8px;margin:16px 0}
-.tab{flex:1;padding:12px;border-radius:10px;border:1px solid #333;background:#222;color:#fff}
-.tab.active{background:#00c853;color:#fff}
-input,select{width:100%;padding:14px;margin:8px 0;border-radius:10px;border:1px solid #333;background:#222;color:#fff;box-sizing:border-box}
-button.buy{width:100%;padding:16px;background:#00c853;border:none;border-radius:12px;color:#fff;font-weight:800;font-size:17px;margin-top:10px}
-#msg{margin-top:12px;padding:12px;border-radius:8px;display:none}
+*{box-sizing:border-box;margin:0;padding:0;font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto}
+body{background:#0a0a0a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.card{background:#151515;border-radius:20px;padding:25px;width:100%;max-width:380px;border:1px solid #222}
+h1{color:#00ff88;text-align:center;font-size:28px;margin-bottom:20px}
+.tabs{display:flex;gap:10px;margin-bottom:20px}
+.tab{flex:1;padding:12px;border-radius:12px;border:none;background:#222;color:#aaa;font-weight:600;cursor:pointer}
+.tab.active{background:#00ff88;color:#000}
+select,input{width:100%;padding:15px;border-radius:12px;border:1px solid #333;background:#222;color:#fff;margin-bottom:15px;font-size:16px;outline:none}
+.btn{width:100%;padding:16px;border-radius:12px;border:none;background:#00ff88;color:#000;font-weight:800;font-size:16px;cursor:pointer}
+.msg{margin-top:15px;padding:12px;border-radius:10px;font-size:14px;display:none}
+.msg.error{display:block;background:#1a2a1a;border:1px solid #ff4444;color:#ff8888}
+.msg.success{display:block;background:#0f2a1a;border:1px solid #00ff88;color:#00ff88}
 </style>
 </head>
 <body>
 <div class="card">
 <h1>EEO DATA</h1>
-<div class="tabs"><button class="tab active" onclick="show('data')">DATA</button><button class="tab" onclick="show('airtime')">AIRTIME</button></div>
-
-<div id="dataBox">
-<select id="net"><option value="1">MTN</option><option value="2">Glo</option><option value="3">Airtel</option><option value="4">9mobile</option></select>
-<input id="phone" placeholder="081..." type="tel"/>
-<select id="plan"><option value="1">MTN 1GB ₦290</option><option value="2">MTN 2GB ₦580</option><option value="7">MTN 5GB ₦1400</option><option value="8">MTN 10GB ₦2800</option></select>
-<button class="buy" onclick="buyData()">BUY DATA NOW</button>
+<div class="tabs">
+<button class="tab active">DATA</button>
+<button class="tab" onclick="alert('Airtime soon')">AIRTIME</button>
 </div>
 
-<div id="airBox" style="display:none">
-<select id="net2"><option value="1">MTN</option><option value="2">Glo</option><option value="3">Airtel</option><option value="4">9mobile</option></select>
-<input id="phone2" placeholder="081..." type="tel"/>
-<input id="amt" placeholder="Amount 100-5000" type="number"/>
-<button class="buy" onclick="buyAirtime()">BUY AIRTIME NOW</button>
-</div>
+<select id="network">
+<option value="1">MTN</option>
+<option value="2">AIRTEL</option>
+<option value="3">GLO</option>
+<option value="4">SMOBILE</option>
+</select>
 
-<div id="msg"></div>
+<input id="phone" type="tel" placeholder="08105629776" value="08105629776" maxlength="11">
+<select id="plan">
+<option value="">-- Select Plan --</option>
+<option value="1">MTN 500MB ₦190 (you sell ₦290 = ₦100 profit)</option>
+<option value="2">MTN 1GB - Check MBC ID for this</option>
+<option value="3">MTN 2GB - Check MBC ID</option>
+</select>
+
+<button id="buyBtn" class="btn" onclick="buyData()">BUY DATA NOW</button>
+<div id="msg" class="msg"></div>
 </div>
 
 <script>
-function show(t){
-  document.getElementById('dataBox').style.display=t==='data'?'block':'none';
-  document.getElementById('airBox').style.display=t==='airtime'?'block':'none';
-  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',(t==='data'&&i===0)||(t==='airtime'&&i===1)));
-}
-function showMsg(txt,ok){const m=document.getElementById('msg');m.style.display='block';m.style.background=ok?'#00c85322':'#ff174422';m.innerText=txt}
-
 async function buyData(){
-  const phone=document.getElementById('phone').value.trim();
-  if(phone.length<11)return showMsg('Put correct number',false);
-  showMsg('Processing... please wait',true);
-  try{
-    const r=await fetch('/api/buy-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network:document.getElementById('net').value,phone,plan:document.getElementById('plan').value})});
-    const d=await r.json(); console.log(d); showMsg(JSON.stringify(d),true);
-    if(d.status==='success'||d.Status==='successful'||d.success){showMsg('SUCCESS! Data delivered!',true); alert('Data sent!');}
-  }catch(e){showMsg('Error: '+e.message,false)}
-}
-async function buyAirtime(){
-  const phone=document.getElementById('phone2').value.trim(); const amt=document.getElementById('amt').value;
-  if(phone.length<11||!amt)return showMsg('Fill phone and amount',false);
-  showMsg('Processing airtime...',true);
-  try{
-    const r=await fetch('/api/buy-airtime',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({network:document.getElementById('net2').value,phone,amount:amt})});
-    const d=await r.json(); console.log(d); showMsg(JSON.stringify(d),true);
-  }catch(e){showMsg('Error: '+e.message,false)}
+ const phone = document.getElementById('phone').value.trim();
+ const data_plan_id = document.getElementById('plan').value;
+ const network = document.getElementById('network').value;
+ const msgEl = document.getElementById('msg');
+ const btn = document.getElementById('buyBtn');
+
+ if(phone.length !== 11){ msgEl.textContent='Phone must be 11 digits'; msgEl.className='msg error'; return; }
+ if(!data_plan_id){ msgEl.textContent='Select plan'; msgEl.className='msg error'; return; }
+
+ btn.disabled=true; btn.textContent='Processing...';
+ msgEl.textContent='Connecting to MBC...'; msgEl.className='msg success';
+
+ try{
+   const res = await fetch('/api/buy-data', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ phone: phone, data_plan_id: parseInt(data_plan_id), network: parseInt(network) })
+   });
+   const data = await res.json();
+   if(res.ok && data.success){
+     msgEl.textContent='✅ '+(data.message||'Success!'); msgEl.className='msg success';
+   } else {
+     msgEl.textContent='❌ '+(data.error||'Failed'); msgEl.className='msg error';
+   }
+ }catch(e){
+   msgEl.textContent='❌ Network error: '+e.message; msgEl.className='msg error';
+ }finally{
+   btn.disabled=false; btn.textContent='BUY DATA NOW';
+ }
 }
 </script>
 </body>
